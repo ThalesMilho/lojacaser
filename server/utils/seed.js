@@ -14,25 +14,31 @@ const args = process.argv.slice(2);
 const email = args[0];
 const password = args[1];
 
-const NUM_PRODUCTS = 100;
-const NUM_BRANDS = 10;
-const NUM_CATEGORIES = 10;
+const NUM_PRODUCTS = 20; // Reduzido para o MVP inicial
+const DEFAULT_BRAND_NAME = 'Loja de Moda Feminina';
+const FASHION_CATEGORIES = [
+  'Vestidos',
+  'Blusas',
+  'Calças',
+  'Saias',
+  'Conjuntos',
+  'Acessórios'
+];
 
 const seedDB = async () => {
   try {
-    let categories = [];
-
     console.log(`${chalk.blue('✓')} ${chalk.blue('Seed database started')}`);
 
-    if (!email || !password) throw new Error('Missing arguments');
+    // 1. Seed Admin User
+    if (!email || !password) throw new Error('Missing arguments for admin user (email password)');
     const existingUser = await User.findOne({ email });
     if (!existingUser) {
       console.log(`${chalk.yellow('!')} ${chalk.yellow('Seeding admin user...')}`);
       const user = new User({
         email,
         password,
-        firstName: 'admin',
-        lastName: 'admin',
+        firstName: 'Admin',
+        lastName: 'User',
         role: ROLES.Admin
       });
 
@@ -42,68 +48,76 @@ const seedDB = async () => {
       await user.save();
       console.log(`${chalk.green('✓')} ${chalk.green('Admin user seeded.')}`);
     } else {
-      console.log(`${chalk.yellow('!')} ${chalk.yellow('Admin user already exists, skipping seeding for admin user.')}`);
+      console.log(`${chalk.yellow('!')} ${chalk.yellow('Admin user already exists.')}`);
     }
 
-    const categoriesCount = await Category.countDocuments();
-    if (categoriesCount >= NUM_CATEGORIES) {
-      console.log(`${chalk.yellow('!')} ${chalk.yellow('Sufficient number of categories already exist, skipping seeding for categories.')}`);
-      categories = await Category.find().select('_id');
+    // 2. Seed Default Brand
+    let defaultBrand = await Brand.findOne({ name: DEFAULT_BRAND_NAME });
+    if (!defaultBrand) {
+      console.log(`${chalk.yellow('!')} ${chalk.yellow('Seeding default brand...')}`);
+      defaultBrand = new Brand({
+        name: DEFAULT_BRAND_NAME,
+        description: 'Nossa loja oficial de moda feminina.',
+        isActive: true
+      });
+      await defaultBrand.save();
+      console.log(`${chalk.green('✓')} ${chalk.green('Default brand seeded.')}`);
     } else {
-      for (let i = 0; i < NUM_CATEGORIES; i++) {
-        const category = new Category({
-          name: faker.commerce.department(),
-          description: faker.lorem.sentence(),
+      console.log(`${chalk.yellow('!')} ${chalk.yellow('Default brand already exists.')}`);
+    }
+
+    // 3. Seed Fashion Categories
+    let categories = [];
+    for (const catName of FASHION_CATEGORIES) {
+      let category = await Category.findOne({ name: catName });
+      if (!category) {
+        console.log(`${chalk.yellow('!')} ${chalk.yellow(`Seeding category: ${catName}...`)}`);
+        category = new Category({
+          name: catName,
+          description: `Coleção de ${catName.toLowerCase()} para o dia a dia.`,
           isActive: true
         });
         await category.save();
-        categories.push(category);
+        console.log(`${chalk.green('✓')} ${chalk.green(`Category ${catName} seeded.`)}`);
+      } else {
+        console.log(`${chalk.yellow('!')} ${chalk.yellow(`Category ${catName} already exists.`)}`);
       }
-      console.log(`${chalk.green('✓')} ${chalk.green('Categories seeded.')}`);
+      categories.push(category);
     }
 
-    const brandsCount = await Brand.countDocuments();
-    if (brandsCount >= NUM_BRANDS) {
-      console.log(`${chalk.yellow('!')} ${chalk.yellow('Sufficient number of brands already exist, skipping seeding for brands.')}`);
-    } else {
-      for (let i = 0; i < NUM_BRANDS; i++) {
-        const brand = new Brand({
-          name: faker.company.name(),
-          description: faker.lorem.sentence(),
-          isActive: true
-        });
-        await brand.save();
-      }
-      console.log(`${chalk.green('✓')} ${chalk.green('Brands seeded.')}`);
-    }
-
+    // 4. Seed Initial Products (Optional, linked to default brand and categories)
     const productsCount = await Product.countDocuments();
-    if (productsCount >= NUM_PRODUCTS) {
-      console.log(`${chalk.yellow('!')} ${chalk.yellow('Sufficient number of products already exist, skipping seeding for products.')}`);
-    } else {
-      const brands = await Brand.find().select('_id');
+    if (productsCount < NUM_PRODUCTS) {
+      console.log(`${chalk.yellow('!')} ${chalk.yellow('Seeding initial products...')}`);
       for (let i = 0; i < NUM_PRODUCTS; i++) {
-        const randomCategoryIndex = faker.number.int(categories.length - 1);
+        const randomCategory = categories[Math.floor(Math.random() * categories.length)];
         const product = new Product({
-          sku: faker.string.alphanumeric(10),
-          name: faker.commerce.productName(),
-          description: faker.lorem.sentence(),
-          quantity: faker.number.int({ min: 1, max: 100 }),
-          price: faker.commerce.price(),
-          taxable: faker.datatype.boolean(),
+          sku: faker.string.alphanumeric(10).toUpperCase(),
+          name: `${faker.commerce.productAdjective()} ${randomCategory.name.slice(0, -1)}`,
+          description: faker.commerce.productDescription(),
+          quantity: faker.number.int({ min: 10, max: 50 }),
+          price: faker.commerce.price({ min: 49, max: 299 }),
+          taxable: true,
           isActive: true,
-          brand: brands[faker.number.int(brands.length - 1)]._id,
-          category: categories[randomCategoryIndex]._id
+          brand: defaultBrand._id,
+          category: randomCategory._id
         });
         await product.save();
-        await Category.updateOne({ _id: categories[randomCategoryIndex]._id }, { $push: { products: product._id } });
+        
+        // Associate product with category
+        await Category.updateOne(
+          { _id: randomCategory._id },
+          { $addToSet: { products: product._id } }
+        );
       }
-      console.log(`${chalk.green('✓')} ${chalk.green('Products seeded and associated with categories.')}`);
+      console.log(`${chalk.green('✓')} ${chalk.green('Initial products seeded.')}`);
+    } else {
+      console.log(`${chalk.yellow('!')} ${chalk.yellow('Products already exist, skipping product seeding.')}`);
     }
+
   } catch (error) {
     console.log(`${chalk.red('x')} ${chalk.red('Error while seeding database')}`);
     console.log(error);
-    return null;
   } finally {
     await mongoose.connection.close();
     console.log(`${chalk.blue('✓')} ${chalk.blue('Database connection closed!')}`);

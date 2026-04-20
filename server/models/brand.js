@@ -21,9 +21,11 @@ const BrandSchema = new Schema({
     slug: 'name',
     unique: true
   },
-  image: {
-    data: Buffer,
-    contentType: String
+  imageUrl: {
+    type: String
+  },
+  imageKey: {
+    type: String
   },
   description: {
     type: String,

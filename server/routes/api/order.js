@@ -6,6 +6,7 @@ const Mongoose = require('mongoose');
 const Order = require('../../models/order');
 const Cart = require('../../models/cart');
 const Product = require('../../models/product');
+const ProductVariant = require('../../models/productVariant');
 const auth = require('../../middleware/auth');
 const mailgun = require('../../services/mailgun');
 const store = require('../../utils/store');
@@ -31,6 +32,9 @@ router.post('/add', auth, async (req, res) => {
         path: 'brand'
       }
     });
+
+    // Deduct stock from variants
+    await decreaseVariantQuantity(cartDoc.products);
 
     const newOrder = {
       _id: orderDoc._id,
@@ -261,7 +265,7 @@ router.delete('/cancel/:orderId', auth, async (req, res) => {
     const order = await Order.findOne({ _id: orderId });
     const foundCart = await Cart.findOne({ _id: order.cart });
 
-    increaseQuantity(foundCart.products);
+    await increaseVariantQuantity(foundCart.products);
 
     await Order.deleteOne({ _id: orderId });
     await Cart.deleteOne({ _id: order.cart });
@@ -294,10 +298,17 @@ router.put('/status/item/:itemId', auth, async (req, res) => {
     );
 
     if (status === CART_ITEM_STATUS.Cancelled) {
-      await Product.updateOne(
-        { _id: foundCartProduct.product },
-        { $inc: { quantity: foundCartProduct.quantity } }
-      );
+      if (foundCartProduct.variant) {
+        await ProductVariant.updateOne(
+          { _id: foundCartProduct.variant },
+          { $inc: { stockQuantity: foundCartProduct.quantity } }
+        );
+      } else {
+        await Product.updateOne(
+          { _id: foundCartProduct.product },
+          { $inc: { quantity: foundCartProduct.quantity } }
+        );
+      }
 
       const cart = await Cart.findOne({ _id: cartId });
       const items = cart.products.filter(
@@ -335,17 +346,50 @@ router.put('/status/item/:itemId', auth, async (req, res) => {
   }
 });
 
-const increaseQuantity = products => {
+const decreaseVariantQuantity = async products => {
   let bulkOptions = products.map(item => {
-    return {
-      updateOne: {
-        filter: { _id: item.product },
-        update: { $inc: { quantity: item.quantity } }
-      }
-    };
+    if (item.variant) {
+      return {
+        updateOne: {
+          filter: { _id: item.variant },
+          update: { $inc: { stockQuantity: -item.quantity } }
+        }
+      };
+    } else {
+      return {
+        updateOne: {
+          filter: { _id: item.product },
+          update: { $inc: { quantity: -item.quantity } }
+        }
+      };
+    }
   });
 
-  Product.bulkWrite(bulkOptions);
+  await ProductVariant.bulkWrite(bulkOptions.filter(op => op.updateOne.filter._id));
+  await Product.bulkWrite(bulkOptions.filter(op => op.updateOne.filter._id));
+};
+
+const increaseVariantQuantity = async products => {
+  let bulkOptions = products.map(item => {
+    if (item.variant) {
+      return {
+        updateOne: {
+          filter: { _id: item.variant },
+          update: { $inc: { stockQuantity: item.quantity } }
+        }
+      };
+    } else {
+      return {
+        updateOne: {
+          filter: { _id: item.product },
+          update: { $inc: { quantity: item.quantity } }
+        }
+      };
+    }
+  });
+
+  await ProductVariant.bulkWrite(bulkOptions.filter(op => op.updateOne.filter._id));
+  await Product.bulkWrite(bulkOptions.filter(op => op.updateOne.filter._id));
 };
 
 module.exports = router;

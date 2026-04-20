@@ -36,15 +36,31 @@ const CartList = props => {
                       }`}
                     />
 
-                    <Link
-                      to={`/product/${item.slug}`}
-                      className='item-link one-line-ellipsis'
-                      onClick={handleProductClick}
-                    >
-                      <h2 className='item-name one-line-ellipsis'>
-                        {item.name}
-                      </h2>
-                    </Link>
+                    <div className='item-info'>
+                      <Link
+                        to={`/product/${item.slug}`}
+                        className='item-link one-line-ellipsis'
+                        onClick={handleProductClick}
+                      >
+                        <h2 className='item-name one-line-ellipsis'>
+                          {item.name}
+                        </h2>
+                      </Link>
+                      {(item.selectedSize || item.selectedColor) && (
+                        <div className='item-variant-details'>
+                          {item.selectedSize && (
+                            <span className='mr-2'>
+                              <strong>Size:</strong> {item.selectedSize}
+                            </span>
+                          )}
+                          {item.selectedColor && (
+                            <span>
+                              <strong>Color:</strong> {item.selectedColor}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </Col>
                 <Col xs='2' className='text-right'>

@@ -13,6 +13,8 @@ const common = require('./webpack.common');
 const CURRENT_WORKING_DIR = process.cwd();
 const NODE_ENV = process.env.NODE_ENV;
 const API_URL = process.env.API_URL;
+const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
+const CLOUDINARY_UPLOAD_PRESET = process.env.CLOUDINARY_UPLOAD_PRESET;
 
 const config = {
   mode: 'production',
@@ -116,7 +118,9 @@ const config = {
     new webpack.DefinePlugin({
       'process.env': {
         NODE_ENV: JSON.stringify(NODE_ENV),
-        API_URL: JSON.stringify(API_URL)
+        API_URL: JSON.stringify(API_URL),
+        CLOUDINARY_CLOUD_NAME: JSON.stringify(CLOUDINARY_CLOUD_NAME),
+        CLOUDINARY_UPLOAD_PRESET: JSON.stringify(CLOUDINARY_UPLOAD_PRESET)
       }
     }),
     new HtmlWebpackPlugin({

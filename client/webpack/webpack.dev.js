@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpackMerge = require('webpack-merge');
 const Dotenv = require('dotenv-webpack');
@@ -62,6 +63,10 @@ const config = {
   },
   plugins: [
     new Dotenv(),
+    new webpack.DefinePlugin({
+      'process.env.CLOUDINARY_CLOUD_NAME': JSON.stringify(process.env.CLOUDINARY_CLOUD_NAME),
+      'process.env.CLOUDINARY_UPLOAD_PRESET': JSON.stringify(process.env.CLOUDINARY_UPLOAD_PRESET)
+    }),
     new HtmlWebpackPlugin({
       template: path.join(CURRENT_WORKING_DIR, 'public/index.html'),
       inject: true

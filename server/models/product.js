@@ -53,6 +53,17 @@ const ProductSchema = new Schema({
     ref: 'Brand',
     default: null
   },
+  // Campos para busca rápida no frontend (Modelo Híbrido)
+  availableSizes: [
+    {
+      type: String
+    }
+  ],
+  availableColors: [
+    {
+      type: String
+    }
+  ],
   updated: Date,
   created: {
     type: Date,

@@ -22,7 +22,9 @@ import {
   FETCH_PRODUCTS_SELECT,
   SET_PRODUCTS_LOADING,
   SET_ADVANCED_FILTERS,
-  RESET_ADVANCED_FILTERS
+  RESET_ADVANCED_FILTERS,
+  SET_PRODUCT_VARIANT_SIZE,
+  SET_PRODUCT_VARIANT_COLOR
 } from './constants';
 
 const initialState = {
@@ -54,6 +56,8 @@ const initialState = {
   formErrors: {},
   editFormErrors: {},
   shopFormErrors: {},
+  selectedSize: '',
+  selectedColor: '',
   advancedFilters: {
     name: 'all',
     category: 'all',
@@ -85,7 +89,9 @@ const productReducer = (state = initialState, action) => {
       return {
         ...state,
         product: action.payload,
-        editFormErrors: {}
+        editFormErrors: {},
+        selectedSize: '',
+        selectedColor: ''
       };
     case FETCH_STORE_PRODUCT:
       return {
@@ -94,7 +100,9 @@ const productReducer = (state = initialState, action) => {
         productShopData: {
           quantity: 1
         },
-        shopFormErrors: {}
+        shopFormErrors: {},
+        selectedSize: '',
+        selectedColor: ''
       };
     case SET_PRODUCTS_LOADING:
       return {
@@ -210,6 +218,16 @@ const productReducer = (state = initialState, action) => {
           count: 0,
           limit: 10
         }
+      };
+    case SET_PRODUCT_VARIANT_SIZE:
+      return {
+        ...state,
+        selectedSize: action.payload
+      };
+    case SET_PRODUCT_VARIANT_COLOR:
+      return {
+        ...state,
+        selectedColor: action.payload
       };
     default:
       return state;

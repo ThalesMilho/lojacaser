@@ -30,6 +30,12 @@ import { toggleCart } from '../Navigation/actions';
 // Handle Add To Cart
 export const handleAddToCart = product => {
   return (dispatch, getState) => {
+    const size = product.selectedSize || 'none';
+    const color = product.selectedColor || 'none';
+    
+    // Cria uma chave única combinando ID, Tamanho e Cor
+    product.cartId = `${product._id}-${size}-${color}`;
+    
     product.quantity = Number(getState().product.productShopData.quantity);
     product.totalPrice = product.quantity * product.price;
     product.totalPrice = parseFloat(product.totalPrice.toFixed(2));
@@ -54,19 +60,37 @@ export const handleAddToCart = product => {
       type: RESET_PRODUCT_SHOP
     });
 
-    dispatch({
-      type: ADD_TO_CART,
-      payload: product
-    });
-
-    const cartItems = JSON.parse(localStorage.getItem(CART_ITEMS));
+    const cartItems = JSON.parse(localStorage.getItem(CART_ITEMS)) || [];
+    
+    // Verifica se o item com a mesma combinação já existe no carrinho
+    const existingItemIndex = cartItems.findIndex(item => item.cartId === product.cartId);
+    
     let newCartItems = [];
-    if (cartItems) {
-      newCartItems = [...cartItems, product];
+    if (existingItemIndex !== -1) {
+      // Se já existe, atualiza a quantidade
+      newCartItems = [...cartItems];
+      newCartItems[existingItemIndex].quantity += product.quantity;
+      newCartItems[existingItemIndex].totalPrice = newCartItems[existingItemIndex].quantity * newCartItems[existingItemIndex].price;
+      newCartItems[existingItemIndex].totalPrice = parseFloat(newCartItems[existingItemIndex].totalPrice.toFixed(2));
+      
+      // No Redux, precisamos tratar isso. Como o reducer atual apenas faz append, 
+      // vamos disparar uma ação de atualização ou recarregar o carrinho.
+      // Para manter a simplicidade com o reducer atual, vamos recarregar o carrinho do localStorage.
     } else {
-      newCartItems.push(product);
+      newCartItems = [...cartItems, product];
     }
+    
     localStorage.setItem(CART_ITEMS, JSON.stringify(newCartItems));
+    
+    // Dispara HANDLE_CART para atualizar o estado global com os novos itens
+    dispatch({
+      type: HANDLE_CART,
+      payload: {
+        cartItems: newCartItems,
+        cartTotal: localStorage.getItem(CART_TOTAL),
+        cartId: localStorage.getItem(CART_ID)
+      }
+    });
 
     dispatch(calculateCartTotal());
     dispatch(toggleCart());
@@ -77,7 +101,8 @@ export const handleAddToCart = product => {
 export const handleRemoveFromCart = product => {
   return (dispatch, getState) => {
     const cartItems = JSON.parse(localStorage.getItem(CART_ITEMS));
-    const newCartItems = cartItems.filter(item => item._id !== product._id);
+    // Usa cartId para remoção precisa
+    const newCartItems = cartItems.filter(item => item.cartId !== product.cartId);
     localStorage.setItem(CART_ITEMS, JSON.stringify(newCartItems));
 
     dispatch({
@@ -85,7 +110,6 @@ export const handleRemoveFromCart = product => {
       payload: product
     });
     dispatch(calculateCartTotal());
-    // dispatch(toggleCart());
   };
 };
 

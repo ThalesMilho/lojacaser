@@ -12,9 +12,7 @@ const { ROLES, MERCHANT_STATUS } = require('../../constants');
 
 router.post('/add', auth, role.check(ROLES.Admin), async (req, res) => {
   try {
-    const name = req.body.name;
-    const description = req.body.description;
-    const isActive = req.body.isActive;
+    const { name, description, isActive, imageUrl, imageKey } = req.body;
 
     if (!description || !name) {
       return res
@@ -25,7 +23,9 @@ router.post('/add', auth, role.check(ROLES.Admin), async (req, res) => {
     const brand = new Brand({
       name,
       description,
-      isActive
+      isActive,
+      imageUrl,
+      imageKey
     });
 
     const brandDoc = await brand.save();

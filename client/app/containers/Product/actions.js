@@ -24,13 +24,16 @@ import {
   FETCH_PRODUCTS_SELECT,
   SET_PRODUCTS_LOADING,
   SET_ADVANCED_FILTERS,
-  RESET_ADVANCED_FILTERS
+  RESET_ADVANCED_FILTERS,
+  SET_PRODUCT_VARIANT_SIZE,
+  SET_PRODUCT_VARIANT_COLOR
 } from './constants';
 
 import { API_URL, ROLES } from '../../constants';
 import handleError from '../../utils/error';
 import { formatSelectOptions, unformatSelectOptions } from '../../utils/select';
 import { allFieldsValidation } from '../../utils/validation';
+import { uploadToCloudinary } from '../../utils/cloudinary';
 
 export const productChange = (name, value) => {
   let formData = {};
@@ -130,7 +133,11 @@ export const fetchStoreProduct = slug => {
       const response = await axios.get(`${API_URL}/product/item/${slug}`);
 
       const inventory = response.data.product.quantity;
-      const product = { ...response.data.product, inventory };
+      const product = {
+        ...response.data.product,
+        inventory,
+        variants: response.data.product.variants || []
+      };
 
       dispatch({
         type: FETCH_STORE_PRODUCT,
@@ -199,7 +206,11 @@ export const fetchProduct = id => {
 
       response.data.product.brand = brandData[0];
 
-      const product = { ...response.data.product, inventory };
+      const product = {
+        ...response.data.product,
+        inventory,
+        variants: response.data.product.variants || []
+      };
 
       dispatch({
         type: FETCH_PRODUCT,
@@ -208,6 +219,20 @@ export const fetchProduct = id => {
     } catch (error) {
       handleError(error, dispatch);
     }
+  };
+};
+
+export const setProductVariantSize = size => {
+  return {
+    type: SET_PRODUCT_VARIANT_SIZE,
+    payload: size
+  };
+};
+
+export const setProductVariantColor = color => {
+  return {
+    type: SET_PRODUCT_VARIANT_COLOR,
+    payload: color
   };
 };
 
@@ -267,22 +292,26 @@ export const addProduct = () => {
       if (!isValid) {
         return dispatch({ type: SET_PRODUCT_FORM_ERRORS, payload: errors });
       }
-      const formData = new FormData();
+
+      let imageUrl = '';
+      let imageKey = '';
+
       if (newProduct.image) {
-        for (const key in newProduct) {
-          if (newProduct.hasOwnProperty(key)) {
-            if (key === 'brand' && newProduct[key] === null) {
-              continue;
-            } else {
-              formData.set(key, newProduct[key]);
-            }
-          }
-        }
+        const uploadResult = await uploadToCloudinary(newProduct.image);
+        imageUrl = uploadResult.imageUrl;
+        imageKey = uploadResult.imageKey;
       }
 
-      const response = await axios.post(`${API_URL}/product/add`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const productPayload = {
+        ...newProduct,
+        imageUrl,
+        imageKey,
+        variants: product.variants || [],
+        availableSizes: product.availableSizes || [],
+        availableColors: product.availableColors || []
+      };
+
+      const response = await axios.post(`${API_URL}/product/add`, productPayload);
 
       const successfulOptions = {
         title: `${response.data.message}`,

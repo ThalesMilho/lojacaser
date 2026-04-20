@@ -49,6 +49,10 @@ class ProductPage extends React.PureComponent {
       handleAddToCart,
       handleRemoveFromCart,
       addProductReview,
+      selectedSize,
+      selectedColor,
+      setProductVariantSize,
+      setProductVariantColor,
       reviewsSummary,
       reviews,
       reviewFormData,
@@ -104,6 +108,38 @@ class ProductPage extends React.PureComponent {
                       <p className='price'>${product.price}</p>
                     </div>
                     <div className='item-customize'>
+                      {product.availableSizes && product.availableSizes.length > 0 && (
+                        <div className='mb-3'>
+                          <label className='d-block mb-2'>Size</label>
+                          <div className='d-flex flex-wrap gap-2'>
+                            {product.availableSizes.map(size => (
+                              <Button
+                                key={size}
+                                variant={selectedSize === size ? 'primary' : 'outline-primary'}
+                                text={size}
+                                className='size-btn mr-2 mb-2'
+                                onClick={() => setProductVariantSize(size)}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {product.availableColors && product.availableColors.length > 0 && (
+                        <div className='mb-3'>
+                          <label className='d-block mb-2'>Color</label>
+                          <div className='d-flex flex-wrap gap-2'>
+                            {product.availableColors.map(color => (
+                              <Button
+                                key={color}
+                                variant={selectedColor === color ? 'primary' : 'outline-primary'}
+                                text={color}
+                                className='color-btn mr-2 mb-2'
+                                onClick={() => setProductVariantColor(color)}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
                       <Input
                         type={'number'}
                         error={shopFormErrors['quantity']}
@@ -142,12 +178,14 @@ class ProductPage extends React.PureComponent {
                         <Button
                           variant='primary'
                           disabled={
-                            product.quantity <= 0 && !shopFormErrors['quantity']
+                            (product.quantity <= 0 && !shopFormErrors['quantity']) ||
+                            (product.availableSizes?.length > 0 && !selectedSize) ||
+                            (product.availableColors?.length > 0 && !selectedColor)
                           }
                           text='Add To Bag'
                           className='bag-btn'
                           icon={<BagIcon />}
-                          onClick={() => handleAddToCart(product)}
+                          onClick={() => handleAddToCart({ ...product, selectedSize, selectedColor })}
                         />
                       )}
                     </div>
@@ -183,6 +221,8 @@ const mapStateToProps = state => {
     product: state.product.storeProduct,
     productShopData: state.product.productShopData,
     shopFormErrors: state.product.shopFormErrors,
+    selectedSize: state.product.selectedSize,
+    selectedColor: state.product.selectedColor,
     isLoading: state.product.isLoading,
     reviews: state.review.productReviews,
     reviewsSummary: state.review.reviewsSummary,

@@ -4,6 +4,9 @@ services:
   client:
     build: client
     container_name: client
+    environment:
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_UPLOAD_PRESET=${CLOUDINARY_UPLOAD_PRESET}
     ports:
       - '8080:8080'
     networks:

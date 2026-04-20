@@ -27,6 +27,7 @@ import handleError from '../../utils/error';
 import { formatSelectOptions } from '../../utils/select';
 import { allFieldsValidation } from '../../utils/validation';
 import { API_URL } from '../../constants';
+import { uploadToCloudinary } from '../../utils/cloudinary';
 
 export const brandChange = (name, value) => {
   let formData = {};
@@ -139,7 +140,22 @@ export const addBrand = () => {
         return dispatch({ type: SET_BRAND_FORM_ERRORS, payload: errors });
       }
 
-      const response = await axios.post(`${API_URL}/brand/add`, brand);
+      let imageUrl = '';
+      let imageKey = '';
+
+      if (brand.image) {
+        const uploadResult = await uploadToCloudinary(brand.image);
+        imageUrl = uploadResult.imageUrl;
+        imageKey = uploadResult.imageKey;
+      }
+
+      const brandPayload = {
+        ...brand,
+        imageUrl,
+        imageKey
+      };
+
+      const response = await axios.post(`${API_URL}/brand/add`, brandPayload);
 
       const successfulOptions = {
         title: `${response.data.message}`,

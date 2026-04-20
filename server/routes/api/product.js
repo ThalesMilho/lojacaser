@@ -1,24 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
 const Mongoose = require('mongoose');
 
 // Bring in Models & Utils
 const Product = require('../../models/product');
 const Brand = require('../../models/brand');
 const Category = require('../../models/category');
+const ProductVariant = require('../../models/productVariant');
 const auth = require('../../middleware/auth');
 const role = require('../../middleware/role');
 const checkAuth = require('../../utils/auth');
-const { s3Upload } = require('../../utils/storage');
 const {
   getStoreProductsQuery,
   getStoreProductsWishListQuery
 } = require('../../utils/queries');
 const { ROLES } = require('../../constants');
-
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
 
 // fetch product slug api
 router.get('/item/:slug', async (req, res) => {
@@ -41,8 +37,13 @@ router.get('/item/:slug', async (req, res) => {
       });
     }
 
+    const variants = await ProductVariant.find({ product: productDoc._id });
+
     res.status(200).json({
-      product: productDoc
+      product: {
+        ...productDoc.toObject(),
+        variants
+      }
     });
   } catch (error) {
     res.status(400).json({
@@ -180,18 +181,23 @@ router.post(
   '/add',
   auth,
   role.check(ROLES.Admin, ROLES.Merchant),
-  upload.single('image'),
   async (req, res) => {
     try {
-      const sku = req.body.sku;
-      const name = req.body.name;
-      const description = req.body.description;
-      const quantity = req.body.quantity;
-      const price = req.body.price;
-      const taxable = req.body.taxable;
-      const isActive = req.body.isActive;
-      const brand = req.body.brand;
-      const image = req.file;
+      const {
+        sku,
+        name,
+        description,
+        quantity,
+        price,
+        taxable,
+        isActive,
+        brand,
+        imageUrl,
+        imageKey,
+        variants,
+        availableSizes,
+        availableColors
+      } = req.body;
 
       if (!sku) {
         return res.status(400).json({ error: 'You must enter sku.' });
@@ -217,8 +223,6 @@ router.post(
         return res.status(400).json({ error: 'This sku is already in use.' });
       }
 
-      const { imageUrl, imageKey } = await s3Upload(image);
-
       const product = new Product({
         sku,
         name,
@@ -229,10 +233,21 @@ router.post(
         isActive,
         brand,
         imageUrl,
-        imageKey
+        imageKey,
+        availableSizes,
+        availableColors
       });
 
       const savedProduct = await product.save();
+
+      if (variants && variants.length > 0) {
+        const productVariants = variants.map(variant => ({
+          ...variant,
+          product: savedProduct._id
+        }));
+
+        await ProductVariant.insertMany(productVariants);
+      }
 
       res.status(200).json({
         success: true,

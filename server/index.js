@@ -6,7 +6,7 @@ const helmet = require('helmet');
 
 const keys = require('./config/keys');
 const routes = require('./routes');
-const socket = require('./socket');
+// const socket = require('./socket'); // WebSockets não são suportados em ambientes Serverless (Vercel)
 const setupDB = require('./utils/db');
 
 const { port } = keys;
@@ -34,4 +34,6 @@ const server = app.listen(port, () => {
   );
 });
 
-socket(server);
+// socket(server); // Desativado para tráfego HTTP puro no MVP Serverless
+
+module.exports = app; // Exportando para uso na Vercel

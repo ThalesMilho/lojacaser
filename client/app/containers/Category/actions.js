@@ -26,6 +26,7 @@ import handleError from '../../utils/error';
 import { formatSelectOptions, unformatSelectOptions } from '../../utils/select';
 import { allFieldsValidation } from '../../utils/validation';
 import { API_URL } from '../../constants';
+import { uploadToCloudinary } from '../../utils/cloudinary';
 
 export const categoryChange = (name, value) => {
   let formData = {};
@@ -145,7 +146,22 @@ export const addCategory = () => {
         return dispatch({ type: SET_CATEGORY_FORM_ERRORS, payload: errors });
       }
 
-      const response = await axios.post(`${API_URL}/category/add`, newCategory);
+      let imageUrl = '';
+      let imageKey = '';
+
+      if (category.image) {
+        const uploadResult = await uploadToCloudinary(category.image);
+        imageUrl = uploadResult.imageUrl;
+        imageKey = uploadResult.imageKey;
+      }
+
+      const categoryPayload = {
+        ...newCategory,
+        imageUrl,
+        imageKey
+      };
+
+      const response = await axios.post(`${API_URL}/category/add`, categoryPayload);
 
       const successfulOptions = {
         title: `${response.data.message}`,
