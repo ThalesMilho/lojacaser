@@ -15,7 +15,7 @@ const email = args[0];
 const password = args[1];
 
 const NUM_PRODUCTS = 20; // Reduzido para o MVP inicial
-const DEFAULT_BRAND_NAME = 'Loja de Moda Feminina';
+const DEFAULT_BRAND_NAME = 'Bella Anac';
 const FASHION_CATEGORIES = [
   'Vestidos',
   'Blusas',
@@ -57,7 +57,7 @@ const seedDB = async () => {
       console.log(`${chalk.yellow('!')} ${chalk.yellow('Seeding default brand...')}`);
       defaultBrand = new Brand({
         name: DEFAULT_BRAND_NAME,
-        description: 'Nossa loja oficial de moda feminina.',
+        description: 'Proporcionando autoestima e confiança com looks autênticos! ❤️',
         isActive: true
       });
       await defaultBrand.save();

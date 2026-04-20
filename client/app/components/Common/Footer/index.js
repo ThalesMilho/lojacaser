@@ -39,6 +39,15 @@ const Footer = () => {
 
   return (
     <footer className='footer'>
+      <a
+        href='https://wa.me/556293256677'
+        target='_blank'
+        rel='noreferrer noopener'
+        className='whatsapp-float'
+        title='Fale conosco no WhatsApp'
+      >
+        <i className='fa fa-whatsapp'></i>
+      </a>
       <Container>
         <div className='footer-content'>
           <div className='footer-block'>
@@ -65,7 +74,7 @@ const Footer = () => {
           </div>
         </div>
         <div className='footer-copyright'>
-          <span>© {new Date().getFullYear()} MERN Store</span>
+          <span>© {new Date().getFullYear()} Bella Anac - Proporcionando autoestima e confiança ❤️</span>
         </div>
         <ul className='footer-social-item'>
           <li>
@@ -74,7 +83,7 @@ const Footer = () => {
             </a>
           </li>
           <li>
-            <a href='/#instagram' rel='noreferrer noopener' target='_blank'>
+            <a href='https://www.instagram.com/bella.anac/' rel='noreferrer noopener' target='_blank'>
               <span className='instagram-icon' />
             </a>
           </li>
