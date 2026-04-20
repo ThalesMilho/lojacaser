@@ -149,12 +149,12 @@ class Navigation extends React.PureComponent {
                 <span>Payment Methods</span>
               </Col>
               <Col md='4' className='text-center d-none d-md-block'>
-                <i className='fa fa-phone' />
-                <span>Call us 951-999-9999</span>
+                <i className='fa fa-whatsapp' />
+                <span>WhatsApp: (62) 9325-6677</span>
               </Col>
               <Col xs='12' className='text-center d-block d-md-none'>
-                <i className='fa fa-phone' />
-                <span> Need advice? Call us 951-999-9999</span>
+                <i className='fa fa-whatsapp' />
+                <span> Dúvidas? (62) 9325-6677</span>
               </Col>
             </Row>
           </Container>
@@ -180,7 +180,7 @@ class Navigation extends React.PureComponent {
                   />
                 )}
                 <Link to='/'>
-                  <h1 className='logo'>MERN Store</h1>
+                  <img className='logo' src='/images/logo.png' alt='Bella Anac' style={{maxHeight: '60px'}} />
                 </Link>
               </div>
             </Col>

@@ -57,7 +57,7 @@ const seedDB = async () => {
       console.log(`${chalk.yellow('!')} ${chalk.yellow('Seeding default brand...')}`);
       defaultBrand = new Brand({
         name: DEFAULT_BRAND_NAME,
-        description: 'Proporcionando autoestima e confiança com looks autênticos! ❤️',
+        description: 'Proporcionando autoestima e confiança com looks autênticos! 🤍',
         isActive: true
       });
       await defaultBrand.save();

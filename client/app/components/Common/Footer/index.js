@@ -40,7 +40,7 @@ const Footer = () => {
   return (
     <footer className='footer'>
       <a
-        href='https://wa.me/556293256677'
+        href='https://wa.me/c/556293256677'
         target='_blank'
         rel='noreferrer noopener'
         className='whatsapp-float'
@@ -74,7 +74,7 @@ const Footer = () => {
           </div>
         </div>
         <div className='footer-copyright'>
-          <span>© {new Date().getFullYear()} Bella Anac - Proporcionando autoestima e confiança ❤️</span>
+          <span>© {new Date().getFullYear()} Bella Anac - Proporcionando autoestima e confiança com looks autênticos! 🤍</span>
         </div>
         <ul className='footer-social-item'>
           <li>
