@@ -62,7 +62,7 @@ class Navigation extends React.PureComponent {
 
       return (
         <div>
-          {parts.map((part, index) => {
+          {parts && parts.map((part, index) => {
             const className = part.highlight
               ? 'react-autosuggest__suggestion-match'
               : null;
@@ -110,10 +110,10 @@ class Navigation extends React.PureComponent {
     const {
       history,
       authenticated,
-      user,
-      cartItems,
-      brands,
-      categories,
+      user = {},
+      cartItems = [],
+      brands = [],
+      categories = [],
       signOut,
       isMenuOpen,
       isCartOpen,
@@ -121,7 +121,7 @@ class Navigation extends React.PureComponent {
       toggleCart,
       toggleMenu,
       searchValue,
-      suggestions,
+      suggestions = [],
       onSearch,
       onSuggestionsFetchRequested,
       onSuggestionsClearRequested
